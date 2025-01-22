@@ -7,13 +7,9 @@
 
 import Foundation
 
-final class DiskStorageManager {
-    static let shared = DiskStorageManager()
-
+final class DiskStorageManager: StorageManagerProtocol {
     private let historyKey = "searchHistory.json"
     private let fileManager = FileManager.default
-
-    private init() {}
 
     private var documentsDirectory: URL {
         return fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
