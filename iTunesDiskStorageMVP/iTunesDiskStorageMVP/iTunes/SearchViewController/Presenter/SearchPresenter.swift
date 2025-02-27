@@ -15,7 +15,7 @@ final class SearchPresenter: SearchPresenterProtocol {
 
     private var albums = [Album]()
 
-    init(view: SearchViewProtocol? = nil,
+    init(view: SearchViewProtocol,
          networkManager: NetworkManagerProtocol,
          storageManager: StorageManagerProtocol
     ) {
@@ -24,7 +24,13 @@ final class SearchPresenter: SearchPresenterProtocol {
         self.storageManager = storageManager
     }
 
+    func viewDidLoad(with term: String) {
+        searchAlbums(with: term)
+    }
+
     func searchAlbums(with term: String) {
+        storageManager.saveSearchTerm(term)
+
         let savedAlbums = storageManager.loadAlbums(for: term)
 
         if !savedAlbums.isEmpty {
@@ -40,19 +46,14 @@ final class SearchPresenter: SearchPresenterProtocol {
 
             switch result {
             case .success(let albums):
-                DispatchQueue.main.async {
-                    self.albums = albums.sorted { $0.collectionName < $1.collectionName }
-                    self.view?.updateAlbums(self.albums)
-                    self.storageManager.saveSearchTerm(term)
-                    for album in albums {
-                        self.storageManager.saveAlbum(album, for: term)
-                    }
-                    print("Successfully loaded \(albums.count) albums.")
+                self.albums = albums.sorted { $0.collectionName < $1.collectionName }
+                self.view?.updateAlbums(self.albums)
+                for album in albums {
+                    self.storageManager.saveAlbum(album, for: term)
                 }
+                print("Successfully loaded \(albums.count) albums.")
             case .failure(let error):
-                DispatchQueue.main.async {
-                    self.view?.showError(error.localizedDescription)
-                }
+                self.view?.showError(error.localizedDescription)
             }
         }
     }
